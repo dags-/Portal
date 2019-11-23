@@ -6,6 +6,7 @@ import me.dags.pitaya.command.fmt.Fmt;
 import me.dags.pitaya.config.Node;
 import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextRepresentable;
 import org.spongepowered.api.world.World;
@@ -62,6 +63,10 @@ public class Portal implements CatalogType, TextRepresentable {
 
     public Vector3d getOrigin() {
         return origin;
+    }
+
+    public boolean contains(Transform<World> transform) {
+        return contains(transform.getExtent().getName(), transform.getPosition());
     }
 
     public boolean contains(String world, Vector3d position) {

@@ -3,10 +3,8 @@ package me.ardacraft.portal;
 import com.flowpowered.math.vector.Vector3d;
 import com.google.inject.Inject;
 import me.dags.pitaya.command.CommandBus;
-import me.dags.pitaya.command.annotation.Command;
-import me.dags.pitaya.command.annotation.Description;
-import me.dags.pitaya.command.annotation.Permission;
-import me.dags.pitaya.command.annotation.Src;
+import me.dags.pitaya.command.annotation.*;
+import me.dags.pitaya.command.command.Flags;
 import me.dags.pitaya.command.fmt.Fmt;
 import me.dags.pitaya.config.Config;
 import org.spongepowered.api.Sponge;
@@ -14,7 +12,6 @@ import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.game.state.GamePostInitializationEvent;
@@ -36,7 +33,7 @@ public class Portals {
 
     private final LinkManager links;
     private final PortalManager portals;
-    private final Map<UUID, Link> activeLinks = new HashMap<>();
+    private final Map<UUID, Portal> activePortals = new HashMap<>();
     private final Map<UUID, PortalBuilder> activeBuilders = new HashMap<>();
 
     @Inject
@@ -99,16 +96,22 @@ public class Portals {
         }
     }
 
-    @Command("portal link <portal1> <portal2>")
+    @Flag("r")
+    @Command("portal link <from> <to>")
     @Permission("portal.command.link")
-    @Description("Link two different portals together")
-    public void link(@Src Player player, Portal portal1, Portal portal2) {
-        if (portal1 == portal2) {
+    @Description("Link from one portal to another (-r to link in the reverse direction as well)")
+    public void link(@Src Player player, Portal from, Portal to, Flags flags) {
+        if (from == to) {
             Fmt.error("Cannot link a portal to itself").tell(player);
         } else {
-            Link link = new Link(portal1, portal2);
-            links.register(link);
-            Fmt.info("Created new portal link ").stress(link).tell(player);
+            Link forwards = new Link(from, to);
+            links.register(forwards);
+            Fmt.info("Created new portal link ").stress(forwards).tell(player);
+            if (flags.has("r")) {
+                Link backwards = new Link(to, from);
+                links.register(backwards);
+                Fmt.info("Created reverse link ").stress(backwards).tell(player);
+            }
         }
     }
 
@@ -134,22 +137,22 @@ public class Portals {
     @Listener
     public void onMove(MoveEntityEvent.Position event, @Root Player player) {
         Transform<World> transform = event.getToTransform();
-        Link currentLink = activeLinks.get(player.getUniqueId());
+        Portal currentPortal = activePortals.get(player.getUniqueId());
 
-        if (currentLink != null) {
-            // player still inside a link portal after teleporting
-            if (currentLink.getPortal(transform).isPresent()) {
+        if (currentPortal != null) {
+            // player still inside the portal they last teleported to
+            if (currentPortal.contains(transform)) {
                 return;
             }
-            // player no longer inside a link portal
-            activeLinks.remove(player.getUniqueId());
+            // player no longer inside a portal
+            activePortals.remove(player.getUniqueId());
         }
 
         for (Link link : links.getLinks(transform)) {
             Transform<World> destination = link.getTransform(transform);
             if (destination != transform) {
                 Vector3d velocity = player.getVelocity();
-                activeLinks.put(player.getUniqueId(), link);
+                activePortals.put(player.getUniqueId(), link.getTo());
                 player.setTransform(destination);
                 // sponge destroys the player object when transporting between worlds?
                 Sponge.getServer().getPlayer(player.getUniqueId()).ifPresent(p -> p.setVelocity(velocity));
@@ -161,6 +164,6 @@ public class Portals {
     @Listener
     public void onQuit(ClientConnectionEvent.Disconnect event) {
         activeBuilders.remove(event.getTargetEntity().getUniqueId());
-        activeLinks.remove(event.getTargetEntity().getUniqueId());
+        activePortals.remove(event.getTargetEntity().getUniqueId());
     }
 }

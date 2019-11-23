@@ -22,54 +22,45 @@ public class Link implements TextRepresentable {
         this.portal2 = portal2;
     }
 
-    public Portal getPortal1() {
+    public Portal getFrom() {
         return portal1;
     }
 
-    public Portal getPortal2() {
+    public Portal getTo() {
         return portal2;
     }
 
     public Optional<Portal> getPortal(Transform<World> transform) {
-        if (getPortal1().contains(transform.getExtent().getName(), transform.getPosition())) {
-            return Optional.of(getPortal1());
-        }
-        if (getPortal2().contains(transform.getExtent().getName(), transform.getPosition())) {
-            return Optional.of(getPortal2());
+        if (getFrom().contains(transform.getExtent().getName(), transform.getPosition())) {
+            return Optional.of(getFrom());
         }
         return Optional.empty();
     }
 
     public Transform<World> getTransform(Transform<World> transform) {
-        return getPortal(transform).map(portal -> getTransform(transform, portal)).orElse(transform);
-    }
-
-    public Transform<World> getTransform(Transform<World> transform, Portal portal) {
-        if (portal != getPortal1() && portal != getPortal2()) {
+        if (!getFrom().contains(transform.getExtent().getName(), transform.getPosition())) {
             return transform;
         }
 
-        Portal target = portal == getPortal1() ? getPortal2() : getPortal1();
-        Optional<World> world = target.getWorld();
+        Optional<World> world = getTo().getWorld();
         if (!world.isPresent()) {
             return transform;
         }
 
         Vector3d position = transform.getPosition();
         Vector3d rotation = transform.getRotation();
-        Vector3d offset = position.sub(portal.getOrigin());
-        Vector3d destination = target.getOrigin().add(offset);
-
+        Vector3d offset = position.sub(getFrom().getOrigin());
+        Vector3d destination = getTo().getOrigin().add(offset);
         return new Transform<>(world.get(), destination, rotation);
     }
 
     @Override
     public String toString() {
-        return portal1 + " <-> " + portal2;
+        return portal1 + " -> " + portal2;
     }
 
     @Override
     public Text toText() {
-        return Fmt.stress(portal1).info(" <-> ").stress(portal2).toText();
+        return Fmt.stress(portal1).info(" -> ").stress(portal2).toText();
     }
 }

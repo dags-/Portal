@@ -45,9 +45,8 @@ public class LinkManager {
     }
 
     public void register(Link link) {
-        register(link.getPortal1(), link);
-        register(link.getPortal2(), link);
-        section.set(link.getPortal1().getName(), link.getPortal2().getName());
+        addLink(link);
+        section.set(link.getFrom().getName(), link.getTo().getName());
         storage.save();
     }
 
@@ -58,8 +57,7 @@ public class LinkManager {
             Optional<Portal> portal2 = Sponge.getRegistry().getType(Portal.class, value.get(""));
             if (portal1.isPresent() && portal2.isPresent()) {
                 Link link = new Link(portal1.get(), portal2.get());
-                register(link.getPortal1(), link);
-                register(link.getPortal2(), link);
+                addLink(link);
             }
         });
     }
@@ -82,12 +80,12 @@ public class LinkManager {
         return remove.size();
     }
 
-    private void register(Portal portal, Link link) {
-        Map<Long, List<Link>> worldLinks = links.computeIfAbsent(portal.getWorldName(), s -> new HashMap<>());
-        int minX = portal.getMin().getFloorX() >> 4;
-        int minZ = portal.getMin().getFloorZ() >> 4;
-        int maxX = portal.getMax().getFloorX() >> 4;
-        int maxZ = portal.getMax().getFloorZ() >> 4;
+    private void addLink(Link link) {
+        Map<Long, List<Link>> worldLinks = links.computeIfAbsent(link.getFrom().getWorldName(), s -> new HashMap<>());
+        int minX = link.getFrom().getMin().getFloorX() >> 4;
+        int minZ = link.getFrom().getMin().getFloorZ() >> 4;
+        int maxX = link.getFrom().getMax().getFloorX() >> 4;
+        int maxZ = link.getFrom().getMax().getFloorZ() >> 4;
         for (int cz = minZ; cz <= maxZ; cz++) {
             for (int cx = minX; cx <= maxX; cx++) {
                 worldLinks.computeIfAbsent(getId(cx, cz), i -> new LinkedList<>()).add(link);
