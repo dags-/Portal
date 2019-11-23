@@ -100,7 +100,7 @@ public class Portals {
 
     @Listener
     public void onPreInit(GamePreInitializationEvent event) {
-        CommandBus.create().register(this);
+        CommandBus.create().register(this).submit();
         Sponge.getRegistry().registerModule(Portal.class, portals);
     }
 
