@@ -1,8 +1,10 @@
 package me.ardacraft.portal;
 
 import com.flowpowered.math.vector.Vector3d;
-import org.spongepowered.api.entity.Entity;
+import me.dags.pitaya.command.fmt.Fmt;
 import org.spongepowered.api.entity.Transform;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.TextRepresentable;
 import org.spongepowered.api.world.World;
 
 import java.util.Optional;
@@ -10,7 +12,7 @@ import java.util.Optional;
 /**
  * @Author <dags@dags.me>
  */
-public class Link {
+public class Link implements TextRepresentable {
 
     private final Portal portal1;
     private final Portal portal2;
@@ -55,9 +57,19 @@ public class Link {
 
         Vector3d position = transform.getPosition();
         Vector3d rotation = transform.getRotation();
-        Vector3d offset = position.sub(portal.getMin());
-        Vector3d destination = target.getMin().add(offset);
+        Vector3d offset = position.sub(portal.getOrigin());
+        Vector3d destination = target.getOrigin().add(offset);
 
         return new Transform<>(world.get(), destination, rotation);
+    }
+
+    @Override
+    public String toString() {
+        return portal1 + " <-> " + portal2;
+    }
+
+    @Override
+    public Text toText() {
+        return Fmt.stress(portal1).info(" <-> ").stress(portal2).toText();
     }
 }

@@ -1,7 +1,5 @@
 package me.ardacraft.portal;
 
-import com.flowpowered.math.vector.Vector3d;
-import com.google.common.reflect.TypeToken;
 import me.dags.pitaya.config.Config;
 import me.dags.pitaya.config.Node;
 import org.spongepowered.api.registry.CatalogRegistryModule;

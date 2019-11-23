@@ -24,7 +24,6 @@ public class LinkManager {
     public LinkManager(Config storage) {
         this.storage = storage;
         this.section = storage.node("links");
-        reload(false);
     }
 
     public List<Link> getLinks(Transform<World> transform) {
@@ -38,9 +37,11 @@ public class LinkManager {
     }
 
     public List<Link> getLinks(String world, int chunkX, int chunkZ) {
-        long id = toId(chunkX, chunkZ);
         Map<Long, List<Link>> worldLinks = links.getOrDefault(world, emptyMap);
-        return worldLinks.getOrDefault(id, LinkManager.emptyList);
+        if (worldLinks == emptyMap) {
+            return emptyList;
+        }
+        return worldLinks.getOrDefault(getId(chunkX, chunkZ), LinkManager.emptyList);
     }
 
     public void register(Link link) {
@@ -50,8 +51,8 @@ public class LinkManager {
         storage.save();
     }
 
-    public void reload(boolean deleteMissing) {
-        List<String> remove = new LinkedList<>();
+    public void reload() {
+        links.clear();
         section.iterate((key, value) -> {
             Optional<Portal> portal1 = Sponge.getRegistry().getType(Portal.class, key.toString());
             Optional<Portal> portal2 = Sponge.getRegistry().getType(Portal.class, value.get(""));
@@ -59,17 +60,26 @@ public class LinkManager {
                 Link link = new Link(portal1.get(), portal2.get());
                 register(link.getPortal1(), link);
                 register(link.getPortal2(), link);
-            } else {
+            }
+        });
+    }
+
+    public int unlink(Portal portal) {
+        List<String> remove = new LinkedList<>();
+
+        section.iterate((key, value) -> {
+            if (key.toString().equals(portal.getName()) || value.get("").equals(portal.getName())) {
                 remove.add(key.toString());
             }
         });
 
-        if (deleteMissing && !remove.isEmpty()) {
-            for (String key : remove) {
-                section.clear(key);
-            }
+        if (remove.size() > 0) {
+            remove.forEach(section::clear);
             storage.save();
+            reload();
         }
+
+        return remove.size();
     }
 
     private void register(Portal portal, Link link) {
@@ -80,13 +90,12 @@ public class LinkManager {
         int maxZ = portal.getMax().getFloorZ() >> 4;
         for (int cz = minZ; cz <= maxZ; cz++) {
             for (int cx = minX; cx <= maxX; cx++) {
-                long id = toId(cx, cz);
-                worldLinks.computeIfAbsent(id, i -> new LinkedList<>()).add(link);
+                worldLinks.computeIfAbsent(getId(cx, cz), i -> new LinkedList<>()).add(link);
             }
         }
     }
 
-    private static long toId(int x, int z) {
+    private static long getId(int x, int z) {
         return (long) x & 4294967295L | ((long) z & 4294967295L) << 32;
     }
 }

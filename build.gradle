@@ -14,7 +14,7 @@ sponge {
     plugin.meta {
         name = rootProject.name
         version = rootProject.version
-        description = "My cool plugin"
+        description = "A seamless portal plugin"
     }
 }
 
@@ -36,8 +36,9 @@ dependencies {
 shadowJar {
     minimize()
     configurations = [project.configurations.shade]
-    relocate "me.dags.pitaya.", "me.dags.${sponge.plugin.id}.libs.pitaya."
+    relocate "me.dags.pitaya.", "me.ardacraft.${sponge.plugin.id}.libs.pitaya."
     archivesBaseName  = "${project.name}-${project.version}-SpongeAPI-${spongeAPI}.jar"
+    classifier = null
 }
 
 build {
