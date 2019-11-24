@@ -10,11 +10,11 @@ def spongeAPI = "7.2.0"
 def spongeChannel = "SNAPSHOT"
 
 sponge {
-    plugin.id = rootProject.name.toLowerCase()
+    plugin.id = "portal"
     plugin.meta {
-        name = rootProject.name
+        name = "Portal"
         version = rootProject.version
-        description = "A seamless portal plugin"
+        description = "A simple portal plugin"
     }
 }
 
@@ -30,14 +30,14 @@ repositories {
 
 dependencies {
     compile "org.spongepowered:spongeapi:${spongeAPI}-${spongeChannel}"
-    shade "com.github.dags-:Pitaya:0.0.5"
+    shade "com.github.dags-:Pitaya:0.0.6"
 }
 
 shadowJar {
     minimize()
     configurations = [project.configurations.shade]
-    relocate "me.dags.pitaya.", "me.ardacraft.${sponge.plugin.id}.libs.pitaya."
-    archivesBaseName  = "${project.name}-${project.version}-SpongeAPI-${spongeAPI}.jar"
+    relocate "me.dags.pitaya.", "me.dags.${sponge.plugin.id}.libs.pitaya."
+    archivesBaseName  = "${sponge.plugin.meta.name}-${spongeAPI}"
     classifier = null
 }
 

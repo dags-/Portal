@@ -1,4 +1,4 @@
-package me.ardacraft.portal;
+package me.dags.portal.portal;
 
 import me.dags.pitaya.config.Config;
 import me.dags.pitaya.config.Node;
@@ -35,6 +35,7 @@ public class PortalManager implements CatalogRegistryModule<Portal> {
 
     @Override
     public void registerDefaults() {
+        registry.clear();
         section.iterate((key, value) -> {
             Portal portal = Portal.deserialize(key.toString(), value);
             registry.put(portal.getName(), portal);

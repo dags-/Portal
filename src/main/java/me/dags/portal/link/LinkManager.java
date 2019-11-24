@@ -1,8 +1,9 @@
-package me.ardacraft.portal;
+package me.dags.portal.link;
 
 import com.flowpowered.math.vector.Vector3i;
 import me.dags.pitaya.config.Config;
 import me.dags.pitaya.config.Node;
+import me.dags.portal.portal.Portal;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.world.World;
@@ -14,8 +15,8 @@ import java.util.*;
  */
 public class LinkManager {
 
-    private static final Map<Long, List<Link>> emptyMap = Collections.emptyMap();
     private static final List<Link> emptyList = Collections.emptyList();
+    private static final Map<Long, List<Link>> emptyMap = Collections.emptyMap();
 
     private final Node section;
     private final Config storage;
@@ -81,14 +82,14 @@ public class LinkManager {
     }
 
     private void addLink(Link link) {
-        Map<Long, List<Link>> worldLinks = links.computeIfAbsent(link.getFrom().getWorldName(), s -> new HashMap<>());
+        Map<Long, List<Link>> chunks = links.computeIfAbsent(link.getFrom().getWorldName(), s -> new HashMap<>());
         int minX = link.getFrom().getMin().getFloorX() >> 4;
         int minZ = link.getFrom().getMin().getFloorZ() >> 4;
         int maxX = link.getFrom().getMax().getFloorX() >> 4;
         int maxZ = link.getFrom().getMax().getFloorZ() >> 4;
         for (int cz = minZ; cz <= maxZ; cz++) {
             for (int cx = minX; cx <= maxX; cx++) {
-                worldLinks.computeIfAbsent(getId(cx, cz), i -> new LinkedList<>()).add(link);
+                chunks.computeIfAbsent(getId(cx, cz), i -> new LinkedList<>()).add(link);
             }
         }
     }

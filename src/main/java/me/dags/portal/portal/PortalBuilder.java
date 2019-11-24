@@ -1,4 +1,4 @@
-package me.ardacraft.portal;
+package me.dags.portal.portal;
 
 import com.flowpowered.math.vector.Vector3i;
 
