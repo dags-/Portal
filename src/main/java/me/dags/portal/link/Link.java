@@ -43,8 +43,8 @@ public class Link implements TextRepresentable {
 
         Vector3d position = transform.getPosition();
         Vector3d rotation = transform.getRotation();
-        Vector3d offset = position.sub(getFrom().getOrigin());
-        Vector3d destination = getTo().getOrigin().add(offset);
+        Vector3d offset = position.sub(getFrom().getMin());
+        Vector3d destination = getTo().getMin().add(offset);
         return new Transform<>(world.get(), destination, rotation);
     }
 

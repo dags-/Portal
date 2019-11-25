@@ -7,10 +7,12 @@ import me.dags.pitaya.config.Node;
 import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.Transform;
+import org.spongepowered.api.service.permission.Subject;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextRepresentable;
 import org.spongepowered.api.world.World;
 
+import javax.sound.sampled.Port;
 import java.util.Optional;
 
 /**
@@ -22,16 +24,33 @@ public class Portal implements CatalogType, TextRepresentable {
     private final String world;
     private final Vector3i pos1;
     private final Vector3i pos2;
-    private final Vector3d min;
-    private final Vector3d max;
+    private final boolean restricted;
 
-    public Portal(String name, String world, Vector3i p1, Vector3i p2) {
+    private transient final Vector3d min;
+    private transient final Vector3d max;
+    private transient final String permission;
+
+    public Portal(String name, PortalBuilder builder) {
+        this.name = name;
+        this.world = builder.world;
+        this.pos1 = builder.pos1.min(builder.pos2);
+        this.pos2 = builder.pos1.max(builder.pos2);
+        this.restricted = builder.restrict;
+
+        this.min = pos1.toDouble();
+        this.max = pos2.add(Vector3i.ONE).toDouble();
+        this.permission = "portal.use." + name;
+    }
+
+    private Portal(String name, String world, Vector3i p1, Vector3i p2, boolean restricted) {
         this.name = name;
         this.world = world;
         this.pos1 = p1.min(p2);
         this.pos2 = p1.max(p2);
+        this.restricted = restricted;
         this.min = pos1.toDouble();
         this.max = pos2.add(Vector3i.ONE).toDouble();
+        this.permission = "portal.use." + name;
     }
 
     @Override
@@ -59,8 +78,8 @@ public class Portal implements CatalogType, TextRepresentable {
         return max;
     }
 
-    public Vector3d getOrigin() {
-        return min;
+    public boolean canUse(Subject subject) {
+        return !restricted || subject.hasPermission(permission);
     }
 
     public boolean contains(Transform<World> transform) {
@@ -81,25 +100,34 @@ public class Portal implements CatalogType, TextRepresentable {
 
     public static void serialize(Portal portal, Node node) {
         node.set("world", portal.getWorldName());
+
         node.set("x1", portal.pos1.getX());
         node.set("y1", portal.pos1.getY());
         node.set("z1", portal.pos1.getZ());
+
         node.set("x2", portal.pos2.getX());
         node.set("y2", portal.pos2.getY());
         node.set("z2", portal.pos2.getZ());
+
+        node.set("restricted", portal.restricted);
     }
 
     public static Portal deserialize(String name, Node node) {
         String world = node.get("world", "");
+
         int x1 = node.get("x1", 0);
         int y1 = node.get("y1", 0);
         int z1 = node.get("z1", 0);
+
         int x2 = node.get("x2", 0);
         int y2 = node.get("y2", 0);
         int z2 = node.get("z2", 0);
+
+        boolean restricted = node.get("restricted", false);
+
         Vector3i pos1 = new Vector3i(x1, y1, z1);
         Vector3i pos2 = new Vector3i(x2, y2, z2);
-        return new Portal(name, world, pos1, pos2);
+        return new Portal(name, world, pos1, pos2, restricted);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package me.dags.portal;
 
+import com.flowpowered.math.vector.Vector3i;
 import me.dags.pitaya.command.annotation.*;
 import me.dags.pitaya.command.command.Flags;
 import me.dags.pitaya.command.fmt.Fmt;
@@ -8,7 +9,12 @@ import me.dags.portal.link.Link;
 import me.dags.portal.portal.Portal;
 import me.dags.portal.portal.PortalBuilder;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.event.filter.cause.Root;
+import org.spongepowered.api.item.inventory.ItemStack;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -29,8 +35,17 @@ public class Commands {
         Sponge.getEventManager().registerListeners(plugin, this);
     }
 
+    @Command("portal wand")
+    @Permission("portal.command.wand")
+    @Description("Give yourself a tool for creating portals")
+    public void wand(@Src Player player) {
+        PortalBuilder builder = builders.compute(player, u -> new PortalBuilder());
+        player.getInventory().offer(builder.tool);
+        Fmt.info("You were given a portal wand").tell(player);
+    }
+
     @Command("portal pos1")
-    @Permission("portal.command.create")
+    @Permission("portal.command.pos")
     @Description("Set the first position of the portal")
     public void pos1(@Src Player player) {
         PortalBuilder builder = builders.compute(player, u -> new PortalBuilder());
@@ -40,13 +55,22 @@ public class Commands {
     }
 
     @Command("portal pos2")
-    @Permission("portal.command.create")
+    @Permission("portal.command.pos")
     @Description("Set the second position of the portal")
     public void pos2(@Src Player player) {
         PortalBuilder builder = builders.compute(player, u -> new PortalBuilder());
         builder.world = player.getWorld().getName();
         builder.pos2 = player.getPosition().toInt();
         Fmt.info("Set pos2 ").stress(builder.pos2).tell(player);
+    }
+
+    @Command("portal restrict <bool>")
+    @Permission("portal.command.restrict")
+    @Description("Set whether permission should be required to use the portal")
+    public void restrict(@Src Player player, boolean restrict) {
+        PortalBuilder builder = builders.compute(player, u -> new PortalBuilder());
+        builder.restrict = restrict;
+        Fmt.info("Set restricted ").stress(restrict).tell(player);
     }
 
     @Command("portal create <name>")
@@ -64,7 +88,7 @@ public class Commands {
             return;
         }
 
-        Portal portal = new Portal(name.toLowerCase(), builder.world, builder.pos1, builder.pos2);
+        Portal portal = builder.build(name);
         plugin.getPortalManager().register(portal);
         builders.remove(player);
         Fmt.info("Created portal ").stress(portal).tell(player);
@@ -107,5 +131,43 @@ public class Commands {
     public void unlink(@Src Player player, Portal portal) {
         int unlinked = plugin.getLinkManager().unlink(portal);
         Fmt.info("Unlinked ").stress(unlinked).info(" portal connected to ").stress(portal).tell(player);
+    }
+
+    @Listener
+    public void onPrimary(InteractBlockEvent.Primary event, @Root Player player) {
+        boolean cancel = onWand(player, event.getTargetBlock().getPosition(), 1);
+        event.setCancelled(cancel);
+    }
+
+    @Listener
+    public void onSecondary(InteractBlockEvent.Primary event, @Root Player player) {
+        boolean cancel = onWand(player, event.getTargetBlock().getPosition(), 2);
+        event.setCancelled(cancel);
+    }
+
+    private boolean onWand(Player player, Vector3i position, int type) {
+        Optional<ItemStack> stack = player.getItemInHand(HandTypes.MAIN_HAND);
+        if (!stack.isPresent()) {
+            return false;
+        }
+
+        Optional<PortalBuilder> builder = builders.get(player);
+        if (!builder.isPresent()) {
+            return false;
+        }
+
+        if (!stack.get().equalTo(builder.get().tool)) {
+            return false;
+        }
+
+        if (type == 1) {
+            builder.get().pos1 = position;
+        } else {
+            builder.get().pos2 = position;
+        }
+
+        builder.get().world = player.getWorld().getName();
+        Fmt.info("Set pos%s ", type).stress(position).tell(player);
+        return true;
     }
 }

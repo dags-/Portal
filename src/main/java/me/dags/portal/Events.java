@@ -49,6 +49,11 @@ public class Events {
         }
 
         for (Link link : portals.getLinkManager().getLinks(transform)) {
+            // portal is restricted and player does not have permission
+            if (!link.getFrom().canUse(player)) {
+                continue;
+            }
+
             Transform<World> destination = link.getTransform(transform);
             if (destination != transform) {
                 Vector3d velocity = player.getVelocity();
