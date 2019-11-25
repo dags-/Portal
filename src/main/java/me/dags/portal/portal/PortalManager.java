@@ -14,8 +14,8 @@ import java.util.Optional;
  */
 public class PortalManager implements CatalogRegistryModule<Portal> {
 
-    private final Config storage;
     private final Node section;
+    private final Config storage;
     private final Map<String, Portal> registry = new HashMap<>();
 
     public PortalManager(Config storage) {
@@ -35,11 +35,15 @@ public class PortalManager implements CatalogRegistryModule<Portal> {
 
     @Override
     public void registerDefaults() {
-        registry.clear();
         section.iterate((key, value) -> {
             Portal portal = Portal.deserialize(key.toString(), value);
             registry.put(portal.getName(), portal);
         });
+    }
+
+    public void reload() {
+        registry.clear();
+        registerDefaults();
     }
 
     public boolean delete(String name) {

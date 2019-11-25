@@ -7,6 +7,7 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
@@ -26,6 +27,11 @@ public class Events {
 
     Events(Portals portals) {
         this.portals = portals;
+    }
+
+    @Listener(order = Order.POST)
+    public void onQuit(ClientConnectionEvent.Disconnect event) {
+        activePortals.remove(event.getTargetEntity().getUniqueId());
     }
 
     @Listener
@@ -53,10 +59,5 @@ public class Events {
                 return;
             }
         }
-    }
-
-    @Listener
-    public void onQuit(ClientConnectionEvent.Disconnect event) {
-        activePortals.remove(event.getTargetEntity().getUniqueId());
     }
 }

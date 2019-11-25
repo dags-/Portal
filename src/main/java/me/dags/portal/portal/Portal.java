@@ -24,7 +24,6 @@ public class Portal implements CatalogType, TextRepresentable {
     private final Vector3i pos2;
     private final Vector3d min;
     private final Vector3d max;
-    private final Vector3d origin;
 
     public Portal(String name, String world, Vector3i p1, Vector3i p2) {
         this.name = name;
@@ -33,7 +32,6 @@ public class Portal implements CatalogType, TextRepresentable {
         this.pos2 = p1.max(p2);
         this.min = pos1.toDouble();
         this.max = pos2.add(Vector3i.ONE).toDouble();
-        this.origin = min.add(max.sub(min).div(2D));
     }
 
     @Override
@@ -62,7 +60,7 @@ public class Portal implements CatalogType, TextRepresentable {
     }
 
     public Vector3d getOrigin() {
-        return origin;
+        return min;
     }
 
     public boolean contains(Transform<World> transform) {

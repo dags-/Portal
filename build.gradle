@@ -18,11 +18,6 @@ sponge {
     }
 }
 
-configurations {
-    shade
-    compile.extendsFrom shade
-}
-
 repositories {
     mavenCentral()
     maven { url "https://jitpack.io" }
@@ -30,13 +25,13 @@ repositories {
 
 dependencies {
     compile "org.spongepowered:spongeapi:${spongeAPI}-${spongeChannel}"
-    shade "com.github.dags-:Pitaya:0.0.6"
+    shadow "com.github.dags-:Pitaya:0.0.7"
 }
 
 shadowJar {
     minimize()
-    configurations = [project.configurations.shade]
-    relocate "me.dags.pitaya.", "me.dags.${sponge.plugin.id}.libs.pitaya."
+    configurations = [project.configurations.shadow]
+    relocate "me.dags.pitaya.", "${project.group}.${sponge.plugin.id}.libs.pitaya."
     archivesBaseName  = "${sponge.plugin.meta.name}-${spongeAPI}"
     classifier = null
 }

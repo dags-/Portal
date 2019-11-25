@@ -10,6 +10,7 @@ import me.dags.portal.portal.PortalBuilder;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -18,7 +19,10 @@ import java.util.concurrent.TimeUnit;
 public class Commands {
 
     private final Portals plugin;
-    private final IdCache<PortalBuilder> builders = new IdCache<>(5, TimeUnit.MINUTES);
+    private final IdCache<PortalBuilder> builders = new IdCache<>(5, TimeUnit.MINUTES, (id, builder) -> {
+        Optional<Player> player = Sponge.getServer().getPlayer(id);
+        player.ifPresent(Fmt.subdued("Your portal builder has expired")::tell);
+    });
 
     Commands(Portals plugin) {
         this.plugin = plugin;

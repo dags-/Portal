@@ -46,7 +46,7 @@ public class Portals {
 
     @Listener
     public void onReload(GameReloadEvent event) {
-        getPortalManager().registerDefaults();
+        portals.reload();
         links.reload();
     }
 
